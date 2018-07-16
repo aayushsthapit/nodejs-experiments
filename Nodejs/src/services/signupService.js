@@ -1,5 +1,10 @@
 import Signup from '../models/signup';
 
+/**
+ * 
+ * @param {Object} signup 
+ * @returns {Promise}
+ */
 export function postSignup(signup)
 {
     console.log(signup.password);
@@ -8,22 +13,11 @@ export function postSignup(signup)
 
     return bcrypt.hash(signup.password,saltRounds).then(hash=>
         {
-            console.log("INaaaaaaaaaaaaaNNNNNNNNNNNNN")
+            if(!hash)
+            {
+                throw new Boom.notFound('Signup failed');
+            }
             new Signup({username:signup.username,password:hash}).save();
             return hash;
         })
-        .catch(console.log("INNNNNNNNNNNNNNNNNNNNNNNNNNNN"));
-
-}
-
-
-export function getPassword(body)
-{
-    console.log(body);
-    return new Signup({username:body}).fetch()
-    .then(user=>
-    {
-        return user.get('password');
-    });
-
 }
