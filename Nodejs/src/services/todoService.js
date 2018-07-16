@@ -52,63 +52,35 @@ export function getBook(id){
    }
 
 
-   export function getBooksbytitle(name)
-   {
-        return Books.query((qb)=>
-        {
-            qb.where('name','LIKE',name);
-        }).fetchAll();
-   }
-
-
-   export function getBooksbycategory(name)
-   {
-       
-       return new Books({name}).fetch({withRelated:'category'})
-       .then(catego=>
-        {
-            if(!catego)
-            {
-                throw new Boom.notFound('Not found');
-            }
-            return catego;
-        });
-
-
-   }
-
-   export function getBooksbycategoryid(id)
-   {
-       
-       return new Category({id}).fetch({withRelated:'books'})
-       .then(catego=>
-        {
-            if(!catego)
-            {
-                throw new Boom.notFound('Not found');
-            }
-            return catego;
-        });
-
-
-   }
-
 /**
- * Sort by bookname.
- * @return {Promise}
+ * @param {Object} query
  */
-export function getSortedbyTitle(sort_by,sort_order)
+
+export function handleFilter(query)
 {
-    return new Books().orderBy(sort_by,sort_order).fetchAll();
-}
+    const sort_by= query.sort_by || 'id';
+    const sort_order= query.sort_order || 'ASC';
+    const page=query.page || '1';
 
-
-export function getPagination(per_page,page)
-{  
-    return new Books().fetchPage({
-        pageSize:per_page,
+    return new Books()
+    .query((qb)=>
+    {  
+        if(query.category_id)    
+        {
+            qb.select('*').from('books').join('books_categories', {'books.id': 'books_categories.book_id'})
+            .where({category_id:query.category_id})
+        }
+        if(query.name)
+        {
+            qb.where('name','LIKE',query.name);   
+        }        
+    })
+    .orderBy(sort_by,sort_order)
+    .fetchPage({
+        pageSize:query.per_page,
         page:page
-    }).then(       
+    })
+    .then(       
         data=>
         {
             return data;
